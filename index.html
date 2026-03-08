@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>🎬 Production Calendar · Revelation Arts</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: #05070a;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 12px;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* --- DYNAMIC LIVE BACKGROUND --- */
+        .live-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at center, #0c121d 0%, #05070a 100%);
+            overflow: hidden;
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.35;
+            animation: move 20s infinite alternate ease-in-out;
+        }
+        .blob-1 { width: 400px; height: 400px; background: #00d2ff; top: -10%; left: -10%; }
+        .blob-2 { width: 500px; height: 500px; background: #8b5cf6; bottom: -10%; right: -10%; animation-delay: -5s; }
+        .blob-3 { width: 300px; height: 300px; background: #ec4899; top: 40%; left: 50%; animation-duration: 15s; }
+
+        @keyframes move {
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            100% { transform: translate(80px, 80px) scale(1.2) rotate(180deg); }
+        }
+
+        .particles {
+            position: absolute;
+            width: 100%; height: 100%;
+            background-image: radial-gradient(1.5px 1.5px at 20px 30px, #fff, transparent), radial-gradient(1px 1px at 100px 150px, #fff, transparent);
+            background-size: 200px 200px;
+            animation: drift 15s linear infinite;
+            opacity: 0.2;
+        }
+        @keyframes drift { from { transform: translateY(0); } to { transform: translateY(-200px); } }
+
+        /* --- MAIN SCHEDULE CARD --- */
+        .schedule {
+            max-width: 480px;
+            width: 100%;
+            background: rgba(18, 22, 29, 0.75);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-radius: 32px;
+            padding: 28px 20px;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .header { text-align: center; margin-bottom: 24px; }
+        .church { color: #00d2ff; font-size: 11px; letter-spacing: 4px; font-weight: 900; margin-bottom: 8px; }
+        h1 { color: white; font-size: 28px; font-weight: 900; letter-spacing: -1px; }
+        h1 span { background: linear-gradient(to right, #00d2ff, #fff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .main-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 24px; padding: 24px; margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative; overflow: hidden;
+        }
+        .main-card::after {
+            content: ""; position: absolute; top: -100%; left: -100%; width: 50%; height: 300%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.03), transparent);
+            transform: rotate(45deg); animation: shimmer 8s infinite;
+        }
+        @keyframes shimmer { 0% { left: -100%; } 20% { left: 150%; } 100% { left: 150%; } }
+
+        .date-badge { display: inline-block; background: #00d2ff; color: #05070a; padding: 5px 15px; border-radius: 8px; font-size: 13px; font-weight: 800; margin-bottom: 15px; }
+        .activity-row { display: flex; align-items: center; gap: 20px; }
+        .activity-emoji { font-size: 32px; background: rgba(0,0,0,0.4); width: 65px; height: 65px; display: flex; align-items: center; justify-content: center; border-radius: 18px; border: 1px solid rgba(255,255,255,0.1); }
+        .activity-name { color: white; font-size: 24px; font-weight: 800; }
+        .activity-label { color: #64748b; font-size: 10px; font-weight: 800; letter-spacing: 1px; }
+
+        .future-grid { display: grid; gap: 10px; margin-bottom: 20px; }
+        .future-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; }
+        .mini-date { color: #94a3b8; font-size: 13px; }
+        .mini-activity { color: white; font-size: 14px; font-weight: 700; }
+
+        .footer { display: flex; flex-direction: column; gap: 10px; }
+        .mobile-btn { width: 100%; padding: 16px; border-radius: 16px; font-size: 15px; font-weight: 700; border: none; cursor: pointer; transition: 0.3s; }
+        .today-btn { background: #00d2ff; color: #05070a; box-shadow: 0 0 20px rgba(0, 210, 255, 0.3); }
+        .check-btn { background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); }
+
+        /* --- VISUAL CALENDAR MODAL --- */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(15px);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .calendar-container {
+            background: #12161d; border: 1px solid rgba(255,255,255,0.1);
+            width: 90%; max-width: 380px; border-radius: 24px; padding: 20px;
+        }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; color: white; }
+        .calendar-header button { background: none; border: none; color: #00d2ff; font-size: 20px; cursor: pointer; padding: 10px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+        .weekday { color: #64748b; font-size: 11px; font-weight: 800; padding-bottom: 10px; }
+        .day { color: white; padding: 10px 0; font-size: 14px; border-radius: 10px; cursor: pointer; transition: 0.2s; }
+        .day:hover { background: rgba(255,255,255,0.05); }
+        .day.today { border: 1px solid #00d2ff; color: #00d2ff; }
+        .day.selected { background: #00d2ff; color: #05070a; font-weight: 800; }
+        .day.empty { cursor: default; }
+
+        .view-indicator { text-align: center; color: #64748b; font-size: 12px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <div class="live-bg">
+        <div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div>
+        <div class="particles"></div>
+    </div>
+
+    <div class="schedule">
+        <div class="header">
+            <div class="church">YOUTH THEATER DEPARTMENT</div>
+            <h1>TIKTOK <span>CALENDAR</span></h1>
+        </div>
+        <div id="content"></div>
+        <div class="footer">
+            <button class="mobile-btn today-btn" id="todayBtn">📍 RETURN TO TODAY</button>
+            <button class="mobile-btn check-btn" id="openCalendar">📅 EXPLORE CALENDAR</button>
+        </div>
+    </div>
+
+    <!-- CALENDAR MODAL -->
+    <div id="calendarModal" class="modal">
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <button id="prevMonth">◀</button>
+                <h3 id="monthDisplay">Month Year</h3>
+                <button id="nextMonth">▶</button>
+            </div>
+            <div class="calendar-grid" id="calendarGrid">
+                <!-- Days injected by JS -->
+            </div>
+            <button class="mobile-btn check-btn" id="closeCalendar" style="margin-top:20px">CLOSE</button>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const ACTIVITIES = [
+                { name: 'Cinematic Drama', emoji: '🎭' },
+                { name: 'Urban Dance', emoji: '👟' },
+                { name: 'Lyrical Poetry', emoji: '📜' }
+            ];
+            const EPOCH = new Date(2023, 0, 7);
+            let displayDate = new Date();
+            let selectedDate = new Date();
+
+            function getActivity(date) {
+                const d = new Date(date);
+                d.setDate(d.getDate() + (6 - d.getDay())); // Get that week's Saturday
+                const weeks = Math.floor((Math.round((d - EPOCH) / 864e5)) / 7);
+                return ACTIVITIES[Math.floor(weeks / 2) % 3];
+            }
+
+            function getCycleInfo(from) {
+                const d = new Date(from); d.setHours(0,0,0,0);
+                const nextSat = new Date(d);
+                nextSat.setDate(d.getDate() + ((6 - d.getDay() + 7) % 7));
+                const weeks = Math.floor((Math.round((nextSat - EPOCH) / 864e5)) / 7);
+                const isOn = (weeks % 2 === 0);
+                let s1 = isOn ? nextSat : new Date(nextSat.getTime() + 7*864e5);
+                return { s1, s2: new Date(s1.getTime() + 14*864e5), s3: new Date(s1.getTime() + 28*864e5), isOn };
+            }
+
+            function renderSchedule(d) {
+                const { s1, s2, s3, isOn } = getCycleInfo(d);
+                const a1 = getActivity(s1), a2 = getActivity(s2), a3 = getActivity(s3);
+                const f = date => date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+                
+                let html = `<div class="view-indicator">Current Selection: <b>${f(d)}</b></div>`;
+                if(!isOn) html += `<div style="text-align:center; color:#94a3b8; font-size:11px; margin-bottom:15px">🎬 REHEARSAL WEEK • NEXT DROP: ${f(s1)}</div>`;
+
+                html += `
+                    <div class="main-card">
+                        <div class="date-badge">${f(s1)}</div>
+                        <div class="activity-row">
+                            <div class="activity-emoji">${a1.emoji}</div>
+                            <div>
+                                <div class="activity-label">UPCOMING PRODUCTION</div>
+                                <div class="activity-name">${a1.name}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="future-grid">
+                        <div class="future-card"><span class="mini-date">${f(s2)}</span><span class="mini-activity">${a2.emoji} ${a2.name}</span></div>
+                        <div class="future-card"><span class="mini-date">${f(s3)}</span><span class="mini-activity">${a3.emoji} ${a3.name}</span></div>
+                    </div>
+                `;
+                document.getElementById('content').innerHTML = html;
+            }
+
+            // CALENDAR LOGIC
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+            function buildCalendar() {
+                const grid = document.getElementById('calendarGrid');
+                const monthDisplay = document.getElementById('monthDisplay');
+                grid.innerHTML = "";
+                
+                monthDisplay.innerText = `${monthNames[displayDate.getMonth()]} ${displayDate.getFullYear()}`;
+                
+                weekDays.forEach(day => grid.innerHTML += `<div class="weekday">${day}</div>`);
+                
+                const firstDay = new Date(displayDate.getFullYear(), displayDate.getMonth(), 1).getDay();
+                const daysInMonth = new Date(displayDate.getFullYear(), displayDate.getMonth() + 1, 0).getDate();
+                
+                for(let i=0; i<firstDay; i++) grid.innerHTML += `<div class="day empty"></div>`;
+                
+                for(let d=1; d<=daysInMonth; d++) {
+                    const dateObj = new Date(displayDate.getFullYear(), displayDate.getMonth(), d);
+                    const isToday = dateObj.toDateString() === new Date().toDateString();
+                    const isSelected = dateObj.toDateString() === selectedDate.toDateString();
+                    
+                    const dayEl = document.createElement('div');
+                    dayEl.className = `day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}`;
+                    dayEl.innerText = d;
+                    dayEl.onclick = () => {
+                        selectedDate = dateObj;
+                        renderSchedule(selectedDate);
+                        document.getElementById('calendarModal').style.display = 'none';
+                    };
+                    grid.appendChild(dayEl);
+                }
+            }
+
+            document.getElementById('openCalendar').onclick = () => {
+                displayDate = new Date(selectedDate);
+                buildCalendar();
+                document.getElementById('calendarModal').style.display = 'flex';
+            };
+            document.getElementById('closeCalendar').onclick = () => document.getElementById('calendarModal').style.display = 'none';
+            document.getElementById('prevMonth').onclick = () => { displayDate.setMonth(displayDate.getMonth() - 1); buildCalendar(); };
+            document.getElementById('nextMonth').onclick = () => { displayDate.setMonth(displayDate.getMonth() + 1); buildCalendar(); };
+            document.getElementById('todayBtn').onclick = () => { selectedDate = new Date(); renderSchedule(selectedDate); };
+
+            renderSchedule(selectedDate);
+        })();
+    </script>
+</body>
+</html>
